@@ -38,12 +38,10 @@ async def login(email, password):
     
     try:
         async with aiohttp.ClientSession() as session:
-            # Initial GET request to retrieve cookies and form details
             async with session.get(login_url) as response:
                 html = await response.text()
                 soup = BeautifulSoup(html, 'html.parser')
             
-            # Solve CAPTCHA
             captcha_img = soup.find('img', src=re.compile(r'captcha', re.I))
             if captcha_img:
                 captcha_url = urljoin(login_url, captcha_img['src'])
@@ -58,7 +56,6 @@ async def login(email, password):
                 print("CAPTCHA image not found.")
                 return False
 
-            # Prepare form data
             csrf_token = soup.find('input', {'name': 'csrf_test_name'})['value']
             encrypted_email_field = "b986a9b7155fcaff96c6ff4ba6471b6aa320d20e12daf98aa3e6ef6974ec15932c711877312145e702214e531a7626780dbb33d60ff86e56b255e073350ba9d4Kn8vsBNXpumNMjuoQqUrr4SUBUQtB0D9wWa+cGdKCT8="
 
@@ -70,7 +67,6 @@ async def login(email, password):
                 'submitLogin': ''
             }
 
-            # Prepare headers (important to mimic browser behavior)
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Mobile Safari/537.36',
                 'Referer': login_url,
@@ -81,7 +77,6 @@ async def login(email, password):
                 'Upgrade-Insecure-Requests': '1',
             }
 
-            # Make login POST request
             async with session.post(login_url, data=form_data, headers=headers, allow_redirects=False) as response:
                 if response.status == 303:
                     redirect_url = response.headers.get('Location')
@@ -90,7 +85,7 @@ async def login(email, password):
                 else:
                     response_text = await response.text()
                     print(f"Login failed with status: {response.status}")
-                    print("Response text:", response_text[:1000])  # Print more of the response text for debugging
+                    print("Response text:", response_text[:1000])  
                     return False
 
     except aiohttp.ClientConnectorError as e:
@@ -102,7 +97,7 @@ async def login(email, password):
 
 
 async def main():
-    # Load credentials from the file
+
     with open('credentials.txt', 'r') as f:
         email = f.readline().strip()
         password = f.readline().strip()
@@ -112,3 +107,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+ 
