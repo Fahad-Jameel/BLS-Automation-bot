@@ -38,9 +38,15 @@ async def login(email, password):
     
     try:
         async with aiohttp.ClientSession() as session:
+            start_time = time.time() 
+            
+        
             async with session.get(login_url) as response:
                 html = await response.text()
                 soup = BeautifulSoup(html, 'html.parser')
+
+            page_load_time = time.time() - start_time
+            print(f"Time to load login page: {page_load_time:.2f} seconds")
             
             captcha_img = soup.find('img', src=re.compile(r'captcha', re.I))
             if captcha_img:
@@ -78,14 +84,18 @@ async def login(email, password):
             }
 
             async with session.post(login_url, data=form_data, headers=headers, allow_redirects=False) as response:
+                login_time = time.time() - start_time  # Total time for the login process
+
                 if response.status == 303:
                     redirect_url = response.headers.get('Location')
                     print(f"Redirecting to: {redirect_url}")
+                    print(f"Total login time: {login_time:.2f} seconds")
                     return True
                 else:
                     response_text = await response.text()
                     print(f"Login failed with status: {response.status}")
-                    print("Response text:", response_text[:1000])  
+                    print("Response text:", response_text[:1000])
+                    print(f"Total login time: {login_time:.2f} seconds")
                     return False
 
     except aiohttp.ClientConnectorError as e:
@@ -95,9 +105,7 @@ async def login(email, password):
     
     return False
 
-
 async def main():
-
     with open('credentials.txt', 'r') as f:
         email = f.readline().strip()
         password = f.readline().strip()
@@ -107,4 +115,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
- 
